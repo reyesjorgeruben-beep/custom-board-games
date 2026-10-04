@@ -25,3 +25,4 @@ These guidelines have high importance for all work in this repository. Read the 
 - Implement in milestone order unless a documented decision changes the sequence. Turns are in initial scope; timers are deferred.
 - Prefer small modules with one responsibility and stable public interfaces. Document changes to shared contracts alongside the change.
 - Do not claim a feature is complete without checking the concrete acceptance criteria in `docs/MILESTONES.md`.
+- Never put tokens, passwords, private keys, or complete connection strings in source, documentation, examples, logs, or tool output. Keep local secrets outside Git; run the configured secret scan before commits. Treat a detected real secret as compromised and rotate it.

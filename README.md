@@ -28,3 +28,17 @@ The project is in its architecture and repository setup stage. No game implement
 | `docs/` | Architecture, decisions, milestones, insights, and active topics |
 
 These folders reserve responsibility boundaries; implementation has not started.
+
+## Secret protection
+
+Keep credentials in your local environment or a managed secret store. `.env` files and common private-key formats are ignored, but an ignore rule does not replace a secret scan.
+
+The repository uses `detect-secrets` before each commit and in GitHub Actions. Install the local hook once after cloning:
+
+```powershell
+python -m pip install pre-commit==4.6.2
+pre-commit install
+pre-commit run --all-files
+```
+
+The hook scans staged files and runs without network verification. GitHub secret scanning and push protection add checks for supported credentials on public repositories. If a real secret reaches Git history, revoke it; deleting a file in a later commit does not remove it from earlier commits.

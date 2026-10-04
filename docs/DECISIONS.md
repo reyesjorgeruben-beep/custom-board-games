@@ -67,3 +67,9 @@ This file records durable project decisions so later work and sessions can recov
 **Decision:** Use `apps/web`, `packages/engine`, `packages/game-sdk`, `packages/protocol`, `packages/ui`, `packages/game-catalog`, `games`, and `services/coordination` as the initial architecture boundaries.
 
 **Rationale:** These locations separate the browser product, reusable engine/contracts/UI, independent games, and network coordination. Dependency direction stays toward shared contracts rather than from shared packages into the app.
+
+## 2026-10-04 — Publish the repository with layered secret checks
+
+**Decision:** The repository may be public after scanning its complete history. Use `detect-secrets` as a local pre-commit hook and in CI, keep local environment and private-key files out of Git, and enable GitHub secret scanning and push protection for the public repository.
+
+**Rationale:** Formatting and ordinary linting do not identify credentials. Local, CI, and GitHub checks cover different paths by which a secret might be introduced; a real leaked credential must still be revoked and replaced.
