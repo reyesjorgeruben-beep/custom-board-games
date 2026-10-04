@@ -11,6 +11,7 @@ The project is in its architecture and repository setup stage. No game implement
 - [Milestones](docs/MILESTONES.md)
 - [Project insights](docs/PROJECT_INSIGHTS.md)
 - [Hot topics](docs/HOT_TOPICS.md)
+- [Coordination storage options](docs/STORAGE_OPTIONS.md)
 - [Contributor and agent guidelines](AGENTS.md)
 
 ## Planned structure

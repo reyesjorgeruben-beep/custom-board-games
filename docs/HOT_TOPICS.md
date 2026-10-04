@@ -7,8 +7,8 @@ This file tracks the work currently being shaped or reviewed. **Confirmed** item
 | Topic | Status | Next action |
 | --- | --- | --- |
 | Initial repository layout and project guidance | Complete locally | Review the written architecture before implementation planning. |
-| GitHub repository creation | Complete | Private repository created at `reyesjorgeruben-beep/custom-board-games`; local architecture and project structure are published on `main`. |
-| Public repository secret protection | In progress | Scan the complete Git history, activate the local pre-commit hook, add CI scanning, enable GitHub protection, then make the repository public. |
+| GitHub repository creation | Complete | Public repository at `reyesjorgeruben-beep/custom-board-games`; project structure and architecture are published on `main`. |
+| Public repository secret protection | Complete | Full history passed Gitleaks, tracked files passed `detect-secrets`, the local pre-commit hook and CI are active, and GitHub secret scanning plus push protection are enabled. |
 
 ## Confirmed direction
 
@@ -33,7 +33,7 @@ This file tracks the work currently being shaped or reviewed. **Confirmed** item
 | Lobby signaling deployment | Open | Decide how guests find hosts and exchange WebRTC signaling data, including session identity and basic abuse controls. |
 | Host loss and reconnection | Open | Choose what happens when the authoritative host disconnects and how a session can recover or end safely. |
 | Inheritance versus composition conventions | Open | Document when shared base types are appropriate; use composition by default until concrete repeated behavior justifies inheritance. |
-| Coordination storage provider | Open | Compare Cloudflare Workers/Durable Objects and AWS services against low usage, no inactivity pause, and cost predictability; keep authoritative game state in the host browser. |
+| Coordination storage provider | Under review | Review `STORAGE_OPTIONS.md`. Cloudflare Workers with Durable Objects fit low-usage room discovery and signaling; AWS is possible but its relevant free offers are time limited. Choose a provider before implementing coordination. Keep authoritative game state in the host browser. |
 
 ## Deferred
 

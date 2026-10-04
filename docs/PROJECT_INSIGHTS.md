@@ -2,6 +2,8 @@
 
 This document is the orientation map for the project. Durable decisions belong in `DECISIONS.md`; active work and unresolved questions belong in `HOT_TOPICS.md`; outcomes belong in `MILESTONES.md`.
 
+The GitHub repository is public. Commit-time and CI secret checks are configured, and GitHub secret scanning and push protection are enabled. Credentials belong in local environment variables or a managed secret store, never in repository files.
+
 ## Product shape
 
 The project is a game-agnostic browser platform for discovering, joining, and playing different board and card games. Board Game Arena is a reference for the broad catalog, lobby, and table experience, not a requirement to copy its internal design.
