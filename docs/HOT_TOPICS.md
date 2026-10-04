@@ -7,7 +7,7 @@ This file tracks the work currently being shaped or reviewed. **Confirmed** item
 | Topic | Status | Next action |
 | --- | --- | --- |
 | Initial repository layout and project guidance | Complete locally | Review the written architecture before implementation planning. |
-| GitHub repository creation | Awaiting authentication | Reauthenticate GitHub CLI, then create and push `custom-board-games` under the selected account and visibility. |
+| GitHub repository creation | Complete | Private repository created at `reyesjorgeruben-beep/custom-board-games`; local architecture and project structure are published on `main`. |
 
 ## Confirmed direction
 
