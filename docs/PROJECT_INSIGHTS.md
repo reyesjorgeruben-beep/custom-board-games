@@ -29,6 +29,7 @@ No single game should dictate the platform's core abstractions. Games register t
 - **Player decisions:** a decision is presented through the same typed protocol to humans and bots. Each decision supplies the context needed for that decision; a response is validated by the game rules before it changes state.
 - **Turn coordination:** the engine tracks whose turn it is and can collect responses from multiple players before resolving a decision. Timers are deferred and should later be a configurable platform policy.
 - **Initial authority model:** the host browser runs the authoritative engine and holds full game state. Guests receive player-specific projections and send responses. WebRTC data channels are the initial real-time transport direction; a coordination service handles discovery/signaling, not game rules or hidden state.
+- **Initial coordination deployment:** use AWS Lambda Function URL and DynamoDB Standard with provisioned capacity for the lobby and short-lived WebRTC signaling records. Bound HTTP polling to connection setup. Keep provider details behind the coordination contract and watch each service's ongoing free allowance.
 - **Future authority model:** keep game and engine contracts portable so authority can move to a dedicated server. Guests must never be able to request or infer data that the visibility policy excludes from their projection.
 
 ## Intended repository map

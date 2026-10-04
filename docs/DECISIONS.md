@@ -73,3 +73,9 @@ This file records durable project decisions so later work and sessions can recov
 **Decision:** The repository may be public after scanning its complete history. Use `detect-secrets` as a local pre-commit hook and in CI, keep local environment and private-key files out of Git, and enable GitHub secret scanning and push protection for the public repository.
 
 **Rationale:** Formatting and ordinary linting do not identify credentials. Local, CI, and GitHub checks cover different paths by which a secret might be introduced; a real leaked credential must still be revoked and replaced.
+
+## 2026-10-04 — Use AWS Always Free services for initial coordination
+
+**Decision:** Build the initial lobby and WebRTC signaling service on AWS with a Lambda Function URL and DynamoDB Standard tables using provisioned capacity. Exchange signaling messages through short-lived, bounded HTTP polling while peers connect. Keep game state in the host browser and the coordination API behind a provider-independent contract. Do not depend on API Gateway WebSocket APIs for the initial zero-cost design.
+
+**Rationale:** The project's expected traffic should fit Lambda and DynamoDB's ongoing monthly free allowances, which remain available on an AWS Paid plan after introductory credits expire. A Function URL has no separate endpoint charge. API Gateway's WebSocket free allowance is limited to the first 12 months, so it would not meet the same ongoing free-use goal. AWS usage outside the free allowances may still incur charges; measure usage and design explicit request and storage bounds.

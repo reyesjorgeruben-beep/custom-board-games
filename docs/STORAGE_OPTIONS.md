@@ -1,6 +1,6 @@
 # Coordination storage options
 
-**Status:** Proposal for review, not an accepted provider decision  
+**Status:** AWS selected for initial coordination; implementation details remain open  
 **Date:** 2026-10-04
 
 ## What needs storage now
@@ -10,20 +10,22 @@
 - The shared service needs short-lived room discovery, presence, and WebRTC signaling messages. These records should expire when a room closes or the host leaves.
 - Player accounts, saved matches, and durable recovery are later requirements. Their storage should be chosen when their access patterns are known.
 
-## Recommended initial provider: Cloudflare
+## Selected initial provider: AWS
+
+Use a Lambda Function URL as a small HTTPS coordination API and DynamoDB Standard tables with provisioned capacity for short-lived room records and signaling messages. The lobby can query available rooms; peers can exchange WebRTC offers, answers, and ICE candidates through bounded HTTP polling during connection setup. Avoid continuous polling after the peer connection is established. The host browser still owns the game state, and the coordination service must never store hidden game data.
+
+This design deliberately avoids API Gateway WebSocket APIs. The [Lambda Function URL endpoint has no separate endpoint charge](https://docs.aws.amazon.com/lambda/latest/dg/furls-http-invoke-decision.html); invocations and compute count against [Lambda's ongoing monthly free allowance](https://aws.amazon.com/lambda/pricing/). [DynamoDB's always-free allowance](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/) applies to Standard tables with provisioned read/write capacity and storage, not arbitrary on-demand usage. Keep requests, storage, outbound transfer, and any other enabled services within their own allowances. On an AWS Paid plan, usage beyond free allowances can incur charges. The new-account Free plan expires, but that does not end the separate Always Free offers on a Paid plan. [AWS Free Tier FAQ](https://aws.amazon.com/free/free-tier-faqs/)
+
+Function URLs are public when configured without IAM authentication, so the application must validate requests, use unguessable room capabilities, bound polling and payload sizes, and prevent untrusted guests from reading other rooms' signaling messages. The exact room authentication and abuse controls are an open design topic. [Function URL access control](https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html)
+
+## Cloudflare alternative
 
 Use a Worker as the coordination API, one Durable Object for the room directory, and a SQLite-backed Durable Object per active room for signaling and presence. Use WebSocket hibernation for idle connections. Do not put game secrets or authoritative match state in these objects.
 
-Cloudflare's Workers Free plan supports SQLite-backed Durable Objects. Its documented free limits include 100,000 Durable Object requests and 13,000 GB-s per day, plus 5 GB total SQLite storage; operations above a Free limit fail rather than incur an overage charge. Inactive objects do not incur duration charges, and WebSocket hibernation avoids duration charges while a room is idle. This is a closer fit than a time-limited signup credit for a hobby project that may sit unused. The documentation does not promise that every account remains active indefinitely, so this is a cost and architecture recommendation, not a service guarantee. [Durable Objects pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/), [WebSocket hibernation](https://developers.cloudflare.com/durable-objects/best-practices/websockets/)
+Cloudflare's Workers Free plan supports SQLite-backed Durable Objects. Its documented free limits include 100,000 Durable Object requests and 13,000 GB-s per day, plus 5 GB total SQLite storage; operations above a Free limit fail rather than incur an overage charge. Inactive objects do not incur duration charges, and WebSocket hibernation avoids duration charges while a room is idle. The documentation does not promise that every account remains active indefinitely. [Durable Objects pricing](https://developers.cloudflare.com/durable-objects/platform/pricing/), [WebSocket hibernation](https://developers.cloudflare.com/durable-objects/best-practices/websockets/)
 
 Inactivity can evict an object's **in-memory** state, but SQLite data written through the Storage API survives eviction and restart. Cloudflare documents this distinction; it does not describe a Supabase-style weekly inactivity purge for Durable Object storage. We should still expire room records intentionally and keep any future long-lived data backed up. [Storage guidance](https://developers.cloudflare.com/durable-objects/best-practices/access-durable-objects-storage/), [lifecycle](https://developers.cloudflare.com/durable-objects/concepts/durable-object-lifecycle/)
 
-## AWS alternative
+## Why API Gateway WebSockets are not in the AWS first version
 
-On AWS, use API Gateway WebSocket APIs for signaling, Lambda for handlers, and DynamoDB records with expiry for rooms. This is feasible and keeps game logic in the host browser. It introduces more deployed services and a less predictable free runway: the documented API Gateway WebSocket allowance is for up to 12 months for new customers, while AWS's current new-account free plan/credits have a separate time limit. DynamoDB and Lambda have their own free quotas, but those do not make the complete signaling stack permanently free. [API Gateway pricing](https://aws.amazon.com/api-gateway/pricing/), [AWS Free Tier FAQ](https://aws.amazon.com/free/free-tier-faqs/), [DynamoDB pricing](https://aws.amazon.com/dynamodb/pricing/), [Lambda pricing](https://aws.amazon.com/lambda/pricing/)
-
-AWS does not solve the no-expiry requirement through its new-account Free plan: that plan ends after six months or when credits are exhausted, whichever happens first. AWS says the account then closes and access to resources and data is lost unless it is upgraded. A paid AWS account can continue running after that, with usage charges for services outside any always-free quotas. This may be a reasonable choice if predictable small charges are acceptable. [AWS account plans](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html), [API Gateway pricing](https://aws.amazon.com/api-gateway/pricing/)
-
-## Decision point
-
-Choose Cloudflare if the priority is a small, low-maintenance room service with a free plan that has no documented weekly inactivity pause. Choose AWS if existing AWS familiarity and infrastructure are more valuable than the extra services and eventual metered costs. Either choice implements the same coordination interface and keeps the engine and game SDK provider-independent.
+AWS's [API Gateway WebSocket free allowance](https://aws.amazon.com/api-gateway/pricing/) is limited to the first 12 months for new customers. That specific service would not meet the goal of ongoing zero-cost use merely by staying under its initial traffic allowance. We can reconsider it if real-time coordination becomes valuable enough to accept metered charges. Either AWS or Cloudflare implements the same coordination interface and leaves the engine and game SDK provider-independent.

@@ -20,6 +20,7 @@ This file tracks the work currently being shaped or reviewed. **Confirmed** item
 | Decision boundary | Confirmed | Humans and bots receive the same typed decision context and return the same response contract. |
 | Initial authority and privacy | Confirmed | Host browser owns full state; guests receive only their visibility-filtered projection and decision context. |
 | Initial connectivity direction | Confirmed | WebRTC data channels for host/guest play, with a separate coordination service for discovery/signaling. |
+| Initial coordination provider | Confirmed | AWS Lambda Function URL and DynamoDB Standard with provisioned capacity; bounded HTTP polling during WebRTC setup. Avoid API Gateway WebSockets in the zero-cost first version. |
 | Turn support | Confirmed | Turns and decisions awaiting multiple player responses are in scope for the engine foundation. |
 
 ## Open design decisions
@@ -30,10 +31,9 @@ This file tracks the work currently being shaped or reviewed. **Confirmed** item
 | Game and package registration | Open | Specify the game manifest/registry contract and how games are discovered without coupling the engine to a fixed catalog. |
 | Visibility policy model | Open | Settle the audience model for public, team, individual player, and hidden values, and how projections are validated at every guest boundary. |
 | Multi-player decision resolution | Open | Define pending-response lifecycle, duplicate/stale submissions, disconnect behavior, and resolution ordering without embedding game semantics in transport code. |
-| Lobby signaling deployment | Open | Decide how guests find hosts and exchange WebRTC signaling data, including session identity and basic abuse controls. |
+| Lobby signaling deployment | Open | Define room identity, guest authorization, bounded HTTP polling, cleanup, and basic abuse controls for the AWS coordination service. |
 | Host loss and reconnection | Open | Choose what happens when the authoritative host disconnects and how a session can recover or end safely. |
 | Inheritance versus composition conventions | Open | Document when shared base types are appropriate; use composition by default until concrete repeated behavior justifies inheritance. |
-| Coordination storage provider | Under review | Review `STORAGE_OPTIONS.md`. Cloudflare Workers with Durable Objects fit low-usage room discovery and signaling; AWS is possible but its relevant free offers are time limited. Choose a provider before implementing coordination. Keep authoritative game state in the host browser. |
 
 ## Deferred
 
