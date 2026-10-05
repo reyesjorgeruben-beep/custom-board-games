@@ -1,0 +1,21 @@
+{
+  "name": "custom-board-games",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "services/*"],
+  "scripts": {
+    "test": "node scripts/run-tests.mjs",
+    "typecheck": "tsc --noEmit",
+    "schema:export": "node --import tsx scripts/export-schemas.mjs",
+    "schema:check": "node --import tsx scripts/export-schemas.mjs --check",
+    "check": "npm run typecheck && npm test && npm run schema:check"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  },
+  "dependencies": {
+    "zod": "^4.1.0"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "@board-games/coordination",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@board-games/protocol": "*"
+  }
+}
