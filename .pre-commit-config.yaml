@@ -4,3 +4,11 @@ repos:
     hooks:
       - id: detect-secrets
         args: [--no-verify]
+  - repo: local
+    hooks:
+      - id: typecheck-and-unit-tests
+        name: TypeScript typecheck and unit tests
+        entry: npm run check
+        language: system
+        pass_filenames: false
+        always_run: true

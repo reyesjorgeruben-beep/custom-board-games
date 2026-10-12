@@ -2,11 +2,12 @@
 
 A browser-based platform for hosting and playing different board games through a shared lobby, table interface, and typed game engine. The platform is designed so game rules can be added without rewriting player interaction, networking, or common visual components.
 
-The project is in its architecture and repository setup stage. No game implementation has been selected as a template for the engine.
+The project is building its game-independent contract foundation. No game implementation has been selected as a template for the engine.
 
 ## Project documents
 
 - [Architecture design](docs/superpowers/specs/2026-10-04-web-game-platform-design.md)
+- [Contract map and protocol schema](docs/CONTRACTS.md)
 - [Decision log](docs/DECISIONS.md)
 - [Milestones](docs/MILESTONES.md)
 - [Project insights](docs/PROJECT_INSIGHTS.md)
@@ -28,7 +29,18 @@ The project is in its architecture and repository setup stage. No game implement
 | `services/coordination/` | Room discovery and connection signaling; no authoritative game state |
 | `docs/` | Architecture, decisions, milestones, insights, and active topics |
 
-These folders reserve responsibility boundaries; implementation has not started.
+The protocol, game, lobby, and presentation boundaries are implemented incrementally. See the contract map for their relationships and current interfaces.
+
+## Working with contracts
+
+Install Node.js 20 or newer, then run:
+
+```powershell
+npm ci
+npm run check
+```
+
+`npm run check` performs strict TypeScript checking, runs all unit tests, and confirms the committed JSON Schema matches the runtime schemas. Every unit test file starts with a short comment stating what it covers. The same command runs in pre-commit and CI.
 
 ## Secret protection
 
@@ -42,4 +54,4 @@ pre-commit install
 pre-commit run --all-files
 ```
 
-The hook scans staged files and runs without network verification. GitHub secret scanning and push protection add checks for supported credentials on public repositories. If a real secret reaches Git history, revoke it; deleting a file in a later commit does not remove it from earlier commits.
+The hook scans staged files and runs the project checks. GitHub secret scanning and push protection add checks for supported credentials on public repositories. If a real secret reaches Git history, revoke it; deleting a file in a later commit does not remove it from earlier commits.

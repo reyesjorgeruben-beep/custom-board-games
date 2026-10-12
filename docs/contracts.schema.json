@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/reyesjorgeruben-beep/custom-board-games/blob/main/docs/contracts.schema.json",
+  "title": "Custom Board Games shared protocol schemas",
+  "description": "Decision context, response, and player view are supplied by each registered game.",
+  "$defs": {
+    "DecisionRequestEnvelope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tableId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "context": {}
+      },
+      "required": [
+        "id",
+        "tableId",
+        "kind",
+        "actorId",
+        "stateVersion",
+        "context"
+      ],
+      "additionalProperties": false
+    },
+    "DecisionSubmissionEnvelope": {
+      "type": "object",
+      "properties": {
+        "decisionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "response": {}
+      },
+      "required": [
+        "decisionId",
+        "kind",
+        "actorId",
+        "stateVersion",
+        "response"
+      ],
+      "additionalProperties": false
+    },
+    "PlayerSnapshotEnvelope": {
+      "type": "object",
+      "properties": {
+        "tableId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "viewerId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "view": {},
+        "pending": {
+          "type": "array",
+          "items": {}
+        }
+      },
+      "required": [
+        "tableId",
+        "viewerId",
+        "stateVersion",
+        "view",
+        "pending"
+      ],
+      "additionalProperties": false
+    },
+    "RoomSummary": {
+      "type": "object",
+      "properties": {
+        "roomId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "gameId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hostId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "playerCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maxPlayers": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "open",
+            "playing",
+            "closed"
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "roomId",
+        "gameId",
+        "hostId",
+        "playerCount",
+        "maxPlayers",
+        "status",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "SignalMessage": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roomId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "senderId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "recipientId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "offer",
+            "answer",
+            "ice-candidate"
+          ]
+        },
+        "payload": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expiresAt": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "id",
+        "roomId",
+        "senderId",
+        "recipientId",
+        "kind",
+        "payload",
+        "sequence",
+        "expiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "VisibilityAudience": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "public"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "players"
+            },
+            "playerIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "required": [
+            "kind",
+            "playerIds"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "team"
+            },
+            "teamId": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "kind",
+            "teamId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "const": "host"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

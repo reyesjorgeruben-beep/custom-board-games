@@ -9,6 +9,8 @@ This file tracks the work currently being shaped or reviewed. **Confirmed** item
 | Initial repository layout and project guidance | Complete locally | Review the written architecture before implementation planning. |
 | GitHub repository creation | Complete | Public repository at `reyesjorgeruben-beep/custom-board-games`; project structure and architecture are published on `main`. |
 | Public repository secret protection | Complete | Full history passed Gitleaks, tracked files passed `detect-secrets`, the local pre-commit hook and CI are active, and GitHub secret scanning plus push protection are enabled. |
+| Interface foundation | In development; checks green locally | Review the implemented contracts against milestone criteria, then build the browser shell. |
+| Contract review schema | In development | Review `CONTRACTS.md` and the generated `contracts.schema.json` against implemented interfaces. |
 
 ## Confirmed direction
 
@@ -21,6 +23,7 @@ This file tracks the work currently being shaped or reviewed. **Confirmed** item
 | Initial authority and privacy | Confirmed | Host browser owns full state; guests receive only their visibility-filtered projection and decision context. |
 | Initial connectivity direction | Confirmed | WebRTC data channels for host/guest play, with a separate coordination service for discovery/signaling. |
 | Initial coordination provider | Confirmed | AWS Lambda Function URL and DynamoDB Standard with provisioned capacity; bounded HTTP polling during WebRTC setup. Avoid API Gateway WebSockets in the zero-cost first version. |
+| Data and input boundaries | Confirmed | Retrieval through ports; presentation receives already loaded views; human and bot providers return the same decision response contract. |
 | Turn support | Confirmed | Turns and decisions awaiting multiple player responses are in scope for the engine foundation. |
 
 ## Open design decisions

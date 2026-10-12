@@ -79,3 +79,21 @@ This file records durable project decisions so later work and sessions can recov
 **Decision:** Build the initial lobby and WebRTC signaling service on AWS with a Lambda Function URL and DynamoDB Standard tables using provisioned capacity. Exchange signaling messages through short-lived, bounded HTTP polling while peers connect. Keep game state in the host browser and the coordination API behind a provider-independent contract. Do not depend on API Gateway WebSocket APIs for the initial zero-cost design.
 
 **Rationale:** The project's expected traffic should fit Lambda and DynamoDB's ongoing monthly free allowances, which remain available on an AWS Paid plan after introductory credits expire. A Function URL has no separate endpoint charge. API Gateway's WebSocket free allowance is limited to the first 12 months, so it would not meet the same ongoing free-use goal. AWS usage outside the free allowances may still incur charges; measure usage and design explicit request and storage bounds.
+
+## 2026-10-05 — Make the shared contracts executable and browsable
+
+**Decision:** Put the shared decision, snapshot, room, signaling, and visibility wire contracts in `packages/protocol`, using strict TypeScript and Zod runtime schemas. Export a generated JSON Schema and maintain a Mermaid relationship map in `docs/CONTRACTS.md`. Keep game-defined decision contexts, responses, and player views open through typed registration rather than a platform action list.
+
+**Rationale:** Types make extension points discoverable to developers; runtime schemas protect host and guest boundaries from untrusted data. A diagram and generated schema let reviewers inspect ownership, messages, and allowed fields without tracing every implementation file.
+
+## 2026-10-05 — Separate retrieval, available data, and input capture
+
+**Decision:** Define retrieval through ports, make presentation consume already available player-facing data, and model human and bot input as adapters that return the same typed decision submission. Neither presentation nor input providers change authoritative game state.
+
+**Rationale:** This keeps game logic blind to storage, network, and human interaction details. It also lets the table render the same view whether data came from the host browser now or a dedicated server later.
+
+## 2026-10-05 — Gate commits on types and unit tests
+
+**Decision:** Use Node 20's built-in test runner for TypeScript unit tests through `tsx`; run strict type checking, all unit tests, and JSON Schema freshness through pre-commit and CI. Start each test file with a comment describing the contract it covers.
+
+**Rationale:** Every contract change needs an executable review signal, and the schema artifact must not drift from its runtime source.

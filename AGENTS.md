@@ -24,5 +24,7 @@ These guidelines have high importance for all work in this repository. Read the 
 - Keep the engine game agnostic. Do not design core APIs around one example game.
 - Implement in milestone order unless a documented decision changes the sequence. Turns are in initial scope; timers are deferred.
 - Prefer small modules with one responsibility and stable public interfaces. Document changes to shared contracts alongside the change.
+- Start every `*.test.ts` file with a short comment describing the behavior or contract it covers. Add unit tests for changed behavior and keep the full `npm run check` suite green.
+- Update `docs/CONTRACTS.md` when ownership or protocol relations change. Regenerate `docs/contracts.schema.json` with `npm run schema:export` when a shared wire schema changes; pre-commit checks that it is current.
 - Do not claim a feature is complete without checking the concrete acceptance criteria in `docs/MILESTONES.md`.
 - Never put tokens, passwords, private keys, or complete connection strings in source, documentation, examples, logs, or tool output. Keep local secrets outside Git; run the configured secret scan before commits. Treat a detected real secret as compromised and rotate it.
