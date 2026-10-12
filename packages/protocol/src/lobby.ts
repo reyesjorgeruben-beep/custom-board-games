@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const boundedIdSchema = z.string().trim().min(1).max(256);
+const idempotencyKeySchema = z.string().regex(/^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/);
 
 export const roomSummarySchema = z.strictObject({
   roomId: z.string().min(1),
@@ -30,16 +31,18 @@ export const roomAccessSchema = z.strictObject({
 });
 export type RoomAccess = z.infer<typeof roomAccessSchema>;
 
-/** Room identities are server-assigned; clients provide only public room settings. */
+/** Keys are private 32-byte random request secrets retained by clients for retries. */
 export const createRoomRequestSchema = z.strictObject({
   gameId: boundedIdSchema,
   maxPlayers: z.number().int().min(1).max(64),
+  idempotencyKey: idempotencyKeySchema,
 });
 export type CreateRoomRequest = z.infer<typeof createRoomRequestSchema>;
 
-/** Joining creates a new server-assigned member and returns its capability once. */
+/** Joining uses a private 32-byte random request secret to replay lost responses safely. */
 export const joinRoomRequestSchema = z.strictObject({
   roomId: boundedIdSchema,
+  idempotencyKey: idempotencyKeySchema,
 });
 export type JoinRoomRequest = z.infer<typeof joinRoomRequestSchema>;
 

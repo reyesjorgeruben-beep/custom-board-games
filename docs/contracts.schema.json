@@ -114,11 +114,16 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 64
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$"
         }
       },
       "required": [
         "gameId",
-        "maxPlayers"
+        "maxPlayers",
+        "idempotencyKey"
       ],
       "additionalProperties": false
     },
@@ -129,10 +134,15 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 256
+        },
+        "idempotencyKey": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$"
         }
       },
       "required": [
-        "roomId"
+        "roomId",
+        "idempotencyKey"
       ],
       "additionalProperties": false
     },
