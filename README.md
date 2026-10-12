@@ -33,7 +33,7 @@ The protocol, game, lobby, and presentation boundaries are implemented increment
 
 ## Working with contracts
 
-Install Node.js 20 or newer, then run:
+Install Node.js 20.9.0 or newer, then run:
 
 ```powershell
 npm ci
