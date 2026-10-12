@@ -3,7 +3,7 @@ import type {
   DecisionMap,
   DecisionRequestFor,
   DecisionSubmissionFor,
-} from '../../protocol/src/decision.ts';
+} from '@board-games/protocol';
 
 /** Public, game-independent metadata needed to register and configure a game. */
 export type GameMetadata = {

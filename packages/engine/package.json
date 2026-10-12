@@ -1,0 +1,12 @@
+{
+  "name": "@board-games/engine",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@board-games/game-sdk": "*",
+    "@board-games/protocol": "*"
+  }
+}

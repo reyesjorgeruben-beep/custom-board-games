@@ -5,15 +5,15 @@ import type {
   DecisionRequestFor,
   DecisionSubmission,
   DecisionSubmissionFor,
-} from '../../protocol/src/decision.ts';
-import type { PlayerSnapshot } from '../../protocol/src/snapshot.ts';
+} from '@board-games/protocol';
+import type { PlayerSnapshot } from '@board-games/protocol';
 import type {
   DecisionResolution,
   DecisionStrategy,
   GameDefinition,
   GamePlayer,
   TurnDecision,
-} from '../../game-sdk/src/index.ts';
+} from '@board-games/game-sdk';
 
 type DecisionParser<M extends DecisionMap> = {
   parseRequest(input: unknown): DecisionRequest<M>;

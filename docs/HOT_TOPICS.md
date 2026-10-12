@@ -2,15 +2,17 @@
 
 This file tracks the work currently being shaped or reviewed. **Confirmed** items are agreed direction; **Undecided** items need a design choice; **Deferred** items are intentionally out of the current scope. Update status and next action as work advances.
 
+The current baseline and proposed PR sequence are tracked in [ROADMAP.md](ROADMAP.md). Its PR sequence is a proposal; the durable choices below and in `DECISIONS.md` remain authoritative.
+
 ## Current development
 
 | Topic | Status | Next action |
 | --- | --- | --- |
-| Initial repository layout and project guidance | Complete locally | Review the written architecture before implementation planning. |
+| Initial repository layout and project guidance | Complete locally | Keep package ownership and documentation aligned as the browser app is added. |
 | GitHub repository creation | Complete | Public repository at `reyesjorgeruben-beep/custom-board-games`; project structure and architecture are published on `main`. |
 | Public repository secret protection | Complete | Full history passed Gitleaks, tracked files passed `detect-secrets`, the local pre-commit hook and CI are active, and GitHub secret scanning plus push protection are enabled. |
-| Interface foundation | In development; checks green locally | Review the implemented contracts against milestone criteria, then build the browser shell. |
-| Contract review schema | In development | Review `CONTRACTS.md` and the generated `contracts.schema.json` against implemented interfaces. |
+| Interface foundation | Implemented baseline; acceptance review pending | Check M1 and M4 criteria against the code, then build the M0 browser shell. |
+| Contract review schema | Generated and checks green; ownership review pending | Align `CONTRACTS.md` with the decision-provider package and review schemas against implemented interfaces. |
 
 ## Confirmed direction
 
@@ -30,11 +32,11 @@ This file tracks the work currently being shaped or reviewed. **Confirmed** item
 
 | Topic | Status | Next action |
 | --- | --- | --- |
-| Decision protocol representation | Open | Define how runtime decision identifiers map to strongly typed per-game contexts and response schemas, including correlation, validation errors, and schema evolution. |
+| Decision protocol representation | Initial typed/runtime contract implemented; evolution policy open | Review current ID, kind, actor, version, and Zod correlation against M1/M4; decide schema evolution before independently deployed clients. |
 | Game and package registration | Open | Specify the game manifest/registry contract and how games are discovered without coupling the engine to a fixed catalog. |
-| Visibility policy model | Open | Settle the audience model for public, team, individual player, and hidden values, and how projections are validated at every guest boundary. |
-| Multi-player decision resolution | Open | Define pending-response lifecycle, duplicate/stale submissions, disconnect behavior, and resolution ordering without embedding game semantics in transport code. |
-| Lobby signaling deployment | Open | Define room identity, guest authorization, bounded HTTP polling, cleanup, and basic abuse controls for the AWS coordination service. |
+| Visibility policy model | Audience helper and strict snapshot parsing implemented; enforcement review open | Verify each game's projection at the guest boundary; settle how audiences apply to nested views. |
+| Multi-player decision resolution | Single-kind response barrier implemented; disconnect policy open | Review duplicate/stale submissions and resolution order; define behavior for disconnects and any need for concurrent kinds. |
+| Lobby signaling deployment | Provider-neutral service implemented; deployment policy open | Define caller-bound room identity, atomic writes, bounded HTTP polling, cleanup, and abuse controls before the AWS adapter. |
 | Host loss and reconnection | Open | Choose what happens when the authoritative host disconnects and how a session can recover or end safely. |
 | Inheritance versus composition conventions | Open | Document when shared base types are appropriate; use composition by default until concrete repeated behavior justifies inheritance. |
 
