@@ -6,6 +6,8 @@ Milestones describe platform outcomes. They do not depend on implementing a part
 
 **Outcome:** The repository has a documented, runnable web application foundation and clearly owned package boundaries.
 
+**Status:** Complete locally (2026-10-12). The Next.js build emits `/catalog`, `/lobby`, and `/table`; their current content is an honest empty state. `npm run check` and `npm run web:build` are the verification gates. Lobby connectivity and playable table behavior remain M3 work.
+
 **Acceptance criteria:**
 
 - The web application uses Next.js, React, and TypeScript.

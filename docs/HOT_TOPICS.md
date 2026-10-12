@@ -10,9 +10,10 @@ The current baseline and proposed PR sequence are tracked in [ROADMAP.md](ROADMA
 | --- | --- | --- |
 | Initial repository layout and project guidance | Complete locally | Keep package ownership and documentation aligned as the browser app is added. |
 | GitHub repository creation | Complete | Public repository at `reyesjorgeruben-beep/custom-board-games`; project structure and architecture are published on `main`. |
-| Public repository secret protection | Complete | Full history passed Gitleaks, tracked files passed `detect-secrets`, the local pre-commit hook and CI are active, and GitHub secret scanning plus push protection are enabled. |
-| Interface foundation | Implemented baseline; acceptance review pending | Check M1 and M4 criteria against the code, then build the M0 browser shell. |
-| Contract review schema | Generated and checks green; ownership review pending | Align `CONTRACTS.md` with the decision-provider package and review schemas against implemented interfaces. |
+| Public repository secret protection | Complete locally | Full history previously passed Gitleaks; the configured `detect-secrets` scan passes, the local pre-commit hook is installed, and CI plus GitHub protections are documented. |
+| Interface foundation | Implemented baseline; M1/M4 acceptance review recorded | Add game registration and rendered human controls in the next milestone PRs. |
+| Contract review schema | Generated and ownership map reviewed | Recheck `CONTRACTS.md` and regenerate the schema whenever shared wire contracts change. |
+| M0 browser shell | Complete locally | Keep catalog, lobby, and table routes as the integration surfaces for later milestone PRs. |
 
 ## Confirmed direction
 

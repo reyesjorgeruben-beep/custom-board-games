@@ -36,7 +36,7 @@ The protocol is independent of the web framework, transport, and storage provide
 | `services/coordination` | Room discovery and connection signaling through a repository port | Protocol | Hidden game state or rules |
 | `packages/ui` | Render-ready table models and loaded-view port | Protocol | Room storage, authoritative state transitions |
 | `packages/decision-providers` | Human input adapter and bot decision handlers using one submission contract | Protocol; injected human capture callback | Rules, authoritative state, transport |
-| `apps/web` | Planned browser composition of these areas | Shared packages | Reimplementation of game rules |
+| `apps/web` | Catalog, lobby, and table routes; future browser composition of shared packages | Next.js, React; shared packages as integration advances | Reimplementation of game rules |
 
 ## Decision and view protocol
 

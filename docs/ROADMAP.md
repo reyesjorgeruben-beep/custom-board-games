@@ -2,18 +2,20 @@
 
 **Status:** Proposal for review, 2026-10-12. This document tracks the current baseline and suggested PR sequence. It does not change decisions in [DECISIONS.md](DECISIONS.md). Accepted choices go there; unresolved choices stay in [HOT_TOPICS.md](HOT_TOPICS.md).
 
+**Progress:** PR 0 is committed locally as `af917b3`. PR 1 is implemented on the dependent `feat/web-shell` branch; the build, route smoke check, and 35-test suite passed locally. Later PRs remain proposed.
+
 ## Where the project stands
 
 - The accepted architecture is a game-independent Next.js catalog, lobby, and table. The host browser owns authoritative state; guests receive player-specific snapshots. WebRTC carries table traffic; AWS Lambda Function URL and DynamoDB Standard provide thin coordination. Timers and dedicated-server authority are deferred.
-- Shared protocol schemas, the game SDK, engine, decision-provider adapters, table data models, and a provider-neutral coordination service exist. `npm run check` passed on 2026-10-12: type checking, 32 tests, and schema freshness.
-- M0 is incomplete: `apps/web` has no application or catalog/lobby/table routes. M1 has substantial code but needs an acceptance review and game registration. M2 has table data models but no React visuals or interaction controls. M3 has coordination logic but no HTTP/AWS adapter, browser lobby, WebRTC transport, or complete playable flow. M4 has provider adapters but no rendered human controls.
+- Shared protocol schemas, the game SDK, engine, decision-provider adapters, table data models, and a provider-neutral coordination service exist. `npm run check` passed on 2026-10-12: type checking, 35 tests, and schema freshness.
+- M0 has a Next.js shell with `/catalog`, `/lobby`, and `/table` empty states. M1 has substantial code but needs game registration. M2 has table data models but no shared tabletop React components or interaction controls. M3 has coordination logic but no HTTP/AWS adapter, connected browser lobby, WebRTC transport, or complete playable flow. M4 has provider adapters but no rendered human controls.
 - The 2026-10-05 interface-foundation plan intentionally built parts of later milestones before the M0 browser shell. This roadmap returns to the documented milestone order without discarding that work.
 
 ### Acceptance review
 
 | Milestone | Criteria already demonstrated | Remaining acceptance work |
 | --- | --- | --- |
-| M0 | Repository guidance and planned package boundaries | Next.js/React app with distinct catalog, lobby, and table destinations; verify every boundary exists as a usable package. |
+| M0 | Repository guidance, package boundaries, and Next.js/React app with distinct catalog, lobby, and table routes; verified by build and route tests. | None for the M0 shell. Live data and controls belong to later milestones. |
 | M1 | Typed game definition, strategies, engine turn/barrier orchestration, runtime decision schemas | Add and exercise game registration; review the complete criteria with a registered fixture game. |
 | M2 | Renderer-neutral table data contract | Visual components, shared selection/zoom/animation behavior, and a game-composed layout. |
 | M3 | Provider-neutral room/signaling service and player snapshot contract | Caller authorization, HTTP/AWS coordination, browser lobby, WebRTC host/guest flow, and end-to-end projection checks. |

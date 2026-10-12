@@ -7,12 +7,12 @@ async function findTests(directory) {
   const nested = await Promise.all(entries.map(async (entry) => {
     const path = join(directory, entry.name);
     if (entry.isDirectory()) return findTests(path);
-    return entry.isFile() && entry.name.endsWith('.test.ts') ? [path] : [];
+    return entry.isFile() && (entry.name.endsWith('.test.ts') || entry.name.endsWith('.test.tsx')) ? [path] : [];
   }));
   return nested.flat();
 }
 
-const tests = (await Promise.all(['packages', 'services'].map(findTests))).flat().sort();
+const tests = (await Promise.all(['apps/web/src', 'packages', 'services'].map(findTests))).flat().sort();
 if (tests.length === 0) {
   console.error('No unit tests found.');
   process.exitCode = 1;
