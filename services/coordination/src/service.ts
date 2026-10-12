@@ -1,6 +1,16 @@
+import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import {
+  createRoomRequestSchema,
+  joinRoomRequestSchema,
+  receiveSignalsRequestSchema,
+  roomAccessSchema,
+  roomMemberRequestSchema,
+  roomMemberSchema,
   roomSummarySchema,
+  sendSignalRequestSchema,
   signalMessageSchema,
+  type RoomAccess,
+  type RoomMember,
   type RoomSummary,
   type SignalMessage,
 } from '@board-games/protocol';
@@ -14,36 +24,29 @@ const DEFAULT_MAX_SIGNAL_PAYLOAD_BYTES = 16 * 1024;
 const DEFAULT_MAX_SIGNAL_LIFETIME_MS = 2 * 60 * 1_000;
 const DEFAULT_MAX_ROOM_PLAYERS = 64;
 
-const roomInputSchema = z.strictObject({
-  gameId: z.string().trim().min(1).max(256),
-  hostId: z.string().trim().min(1).max(256),
-  maxPlayers: z.number().int().min(1).max(DEFAULT_MAX_ROOM_PLAYERS),
-});
-
-const memberInputSchema = z.strictObject({
-  roomId: z.string().trim().min(1).max(256),
-  playerId: z.string().trim().min(1).max(256),
-});
-
 const roomListQuerySchema = z.strictObject({
   limit: z.number().int().min(1).max(MAX_DISCOVERY_LIMIT).optional(),
 });
 
-const receiveSignalsQuerySchema = z.strictObject({
-  roomId: z.string().trim().min(1).max(256),
-  recipientId: z.string().trim().min(1).max(256),
-  afterSequence: z.number().int().min(-1).optional(),
-  limit: z.number().int().min(1).max(MAX_SIGNAL_PAGE_LIMIT).optional(),
+const storedMemberSchema = z.strictObject({
+  playerId: z.string().trim().min(1).max(256),
+  capabilityHash: z.string().regex(/^[0-9a-f]{64}$/),
 });
 
 const storedRoomSchema = z.strictObject({
   summary: roomSummarySchema,
-  memberIds: z.array(z.string().trim().min(1).max(256)).max(DEFAULT_MAX_ROOM_PLAYERS),
+  members: z.array(storedMemberSchema).max(DEFAULT_MAX_ROOM_PLAYERS),
 });
+
+export interface StoredMember {
+  readonly playerId: string;
+  /** SHA-256 digest of the high-entropy bearer capability; never the raw capability. */
+  readonly capabilityHash: string;
+}
 
 export interface StoredRoom {
   readonly summary: RoomSummary;
-  readonly memberIds: readonly string[];
+  readonly members: readonly StoredMember[];
 }
 
 export interface SignalQuery {
@@ -53,7 +56,7 @@ export interface SignalQuery {
   readonly limit: number;
 }
 
-/** Persistence-only operations; stored room records contain membership and lobby metadata only. */
+/** Persistence-only operations; room records contain hashes, membership, and lobby metadata. */
 export interface CoordinationRepository {
   loadRoom(roomId: string): Promise<unknown | undefined>;
   loadRooms(limit: number): Promise<readonly unknown[]>;
@@ -65,11 +68,12 @@ export interface CoordinationRepository {
 
 export type CoordinationErrorCode =
   | 'INVALID_INPUT'
+  | 'UNAUTHORIZED'
   | 'ROOM_NOT_FOUND'
   | 'ROOM_NOT_OPEN'
   | 'ROOM_FULL'
   | 'ROOM_ID_COLLISION'
-  | 'NOT_A_MEMBER'
+  | 'PLAYER_ID_COLLISION'
   | 'INVALID_SIGNAL_TARGET'
   | 'SIGNAL_EXPIRED'
   | 'SIGNAL_LIFETIME_EXCEEDED'
@@ -85,6 +89,7 @@ export class CoordinationError extends Error {
 }
 
 export interface CoordinationServiceOptions {
+  /** Generates non-secret room, member, and signal identifiers. */
   readonly createId: () => string;
   readonly now: () => number;
   readonly maxSignalPayloadBytes?: number;
@@ -92,9 +97,9 @@ export interface CoordinationServiceOptions {
 }
 
 export interface CoordinationService {
-  createRoom(input: unknown): Promise<RoomSummary>;
+  createRoom(input: unknown): Promise<RoomAccess>;
   listRooms(query?: unknown): Promise<readonly RoomSummary[]>;
-  joinRoom(input: unknown): Promise<RoomSummary>;
+  joinRoom(input: unknown): Promise<RoomAccess>;
   leaveRoom(input: unknown): Promise<RoomSummary | undefined>;
   sendSignal(input: unknown): Promise<SignalMessage>;
   receiveSignals(query: unknown): Promise<readonly SignalMessage[]>;
@@ -117,11 +122,14 @@ function parseStoredRoom(input: unknown): StoredRoom {
   }
 
   const room = result.data;
-  const hasUniqueMembers = new Set(room.memberIds).size === room.memberIds.length;
-  const isConsistent = room.summary.playerCount === room.memberIds.length
+  const playerIds = room.members.map(({ playerId }) => playerId);
+  const capabilityHashes = room.members.map(({ capabilityHash }) => capabilityHash);
+  const hasUniqueMembers = new Set(playerIds).size === playerIds.length;
+  const hasUniqueCapabilities = new Set(capabilityHashes).size === capabilityHashes.length;
+  const isConsistent = room.summary.playerCount === room.members.length
     && room.summary.playerCount <= room.summary.maxPlayers
-    && room.memberIds.includes(room.summary.hostId);
-  if (!hasUniqueMembers || !isConsistent) {
+    && playerIds.includes(room.summary.hostId);
+  if (!hasUniqueMembers || !hasUniqueCapabilities || !isConsistent) {
     throw new CoordinationError('INVALID_STORED_ROOM', 'The stored room membership is inconsistent.');
   }
 
@@ -140,6 +148,16 @@ function payloadSize(payload: string): number {
   return new TextEncoder().encode(payload).byteLength;
 }
 
+function capabilityDigest(capability: string): string {
+  return createHash('sha256').update(capability).digest('hex');
+}
+
+function digestMatches(left: string, right: string): boolean {
+  const leftBytes = Buffer.from(left, 'hex');
+  const rightBytes = Buffer.from(right, 'hex');
+  return leftBytes.length === rightBytes.length && timingSafeEqual(leftBytes, rightBytes);
+}
+
 export function createCoordinationService(
   repository: CoordinationRepository,
   options: CoordinationServiceOptions,
@@ -153,6 +171,39 @@ export function createCoordinationService(
     throw new RangeError('maxSignalLifetimeMs must be a positive safe integer.');
   }
 
+  function createIdentifier(purpose: string): string {
+    const id = options.createId();
+    if (typeof id !== 'string') {
+      throw new RangeError(`The generated ${purpose} identifier is invalid.`);
+    }
+    const normalized = id.trim();
+    if (!normalized || normalized.length > 256) {
+      throw new RangeError(`The generated ${purpose} identifier is invalid.`);
+    }
+    return normalized;
+  }
+
+  function createCapability(): string {
+    const capability = randomBytes(32).toString('base64url');
+    const result = roomMemberSchema.shape.capability.safeParse(capability);
+    if (!result.success) {
+      throw new RangeError('The generated room capability is invalid.');
+    }
+    return result.data;
+  }
+
+  function requireMember(room: StoredRoom, capability: string): StoredMember {
+    const digest = capabilityDigest(capability);
+    let caller: StoredMember | undefined;
+    for (const member of room.members) {
+      if (digestMatches(member.capabilityHash, digest)) caller = member;
+    }
+    if (caller === undefined) {
+      throw new CoordinationError('UNAUTHORIZED', 'The caller is not authorized for this room.');
+    }
+    return caller;
+  }
+
   async function requireRoom(roomId: string): Promise<StoredRoom> {
     const candidate = await repository.loadRoom(roomId);
     if (candidate === undefined) {
@@ -163,25 +214,29 @@ export function createCoordinationService(
 
   return {
     async createRoom(input) {
-      const request = parseInput(roomInputSchema, input);
-      const roomId = options.createId();
-      if (!roomId.trim() || roomId.length > 256) invalidInput();
-      const existing = await repository.loadRoom(roomId);
-      if (existing !== undefined) {
+      const request = parseInput(createRoomRequestSchema, input);
+      const roomId = createIdentifier('room');
+      if (await repository.loadRoom(roomId) !== undefined) {
         throw new CoordinationError('ROOM_ID_COLLISION', 'The generated room identifier is already in use.');
       }
 
+      const playerId = createIdentifier('host player');
+      const capability = createCapability();
       const summary = roomSummarySchema.parse({
         roomId,
         gameId: request.gameId,
-        hostId: request.hostId,
+        hostId: playerId,
         playerCount: 1,
         maxPlayers: request.maxPlayers,
         status: 'open',
         version: 0,
       });
-      await repository.saveRoom({ summary, memberIds: [request.hostId] });
-      return summary;
+      const access = roomAccessSchema.parse({ room: summary, member: { playerId, capability } });
+      await repository.saveRoom({
+        summary,
+        members: [{ playerId, capabilityHash: capabilityDigest(capability) }],
+      });
+      return access;
     },
 
     async listRooms(query = {}) {
@@ -196,87 +251,101 @@ export function createCoordinationService(
     },
 
     async joinRoom(input) {
-      const request = parseInput(memberInputSchema, input);
+      const request = parseInput(joinRoomRequestSchema, input);
       const room = await requireRoom(request.roomId);
-      if (room.memberIds.includes(request.playerId)) return room.summary;
       if (room.summary.status !== 'open') {
         throw new CoordinationError('ROOM_NOT_OPEN', 'Only open rooms accept new members.');
       }
-      if (room.memberIds.length >= room.summary.maxPlayers) {
+      if (room.members.length >= room.summary.maxPlayers) {
         throw new CoordinationError('ROOM_FULL', 'The room has reached its player limit.');
       }
 
-      const memberIds = [...room.memberIds, request.playerId];
+      const playerId = createIdentifier('guest player');
+      if (room.members.some((member) => member.playerId === playerId)) {
+        throw new CoordinationError('PLAYER_ID_COLLISION', 'The generated player identifier is already in use.');
+      }
+      const capability = createCapability();
+      const capabilityHash = capabilityDigest(capability);
+      if (room.members.some((member) => digestMatches(member.capabilityHash, capabilityHash))) {
+        throw new RangeError('The generated room capability is already in use.');
+      }
+      const members = [...room.members, { playerId, capabilityHash }];
       const summary = roomSummarySchema.parse({
         ...room.summary,
-        playerCount: memberIds.length,
+        playerCount: members.length,
         version: room.summary.version + 1,
       });
-      await repository.saveRoom({ summary, memberIds });
-      return summary;
+      const access = roomAccessSchema.parse({ room: summary, member: { playerId, capability } });
+      await repository.saveRoom({ summary, members });
+      return access;
     },
 
     async leaveRoom(input) {
-      const request = parseInput(memberInputSchema, input);
+      const request = parseInput(roomMemberRequestSchema, input);
       const room = await requireRoom(request.roomId);
-      if (!room.memberIds.includes(request.playerId)) {
-        throw new CoordinationError('NOT_A_MEMBER', 'The player is not a member of this room.');
-      }
-      if (request.playerId === room.summary.hostId) {
+      const caller = requireMember(room, request.capability);
+      if (caller.playerId === room.summary.hostId) {
         await repository.deleteRoom(request.roomId);
         return undefined;
       }
 
-      const memberIds = room.memberIds.filter((memberId) => memberId !== request.playerId);
+      const members = room.members.filter((member) => member.playerId !== caller.playerId);
       const summary = roomSummarySchema.parse({
         ...room.summary,
-        playerCount: memberIds.length,
+        playerCount: members.length,
         version: room.summary.version + 1,
       });
-      await repository.saveRoom({ summary, memberIds });
+      await repository.saveRoom({ summary, members });
       return summary;
     },
 
     async sendSignal(input) {
-      const message = parseInput(signalMessageSchema, input);
+      const request = parseInput(sendSignalRequestSchema, input);
       const now = options.now();
-      if (message.expiresAt <= now) {
+      if (request.expiresAt <= now) {
         throw new CoordinationError('SIGNAL_EXPIRED', 'The signaling message has expired.');
       }
-      if (message.expiresAt > now + maxSignalLifetimeMs) {
+      if (request.expiresAt > now + maxSignalLifetimeMs) {
         throw new CoordinationError('SIGNAL_LIFETIME_EXCEEDED', 'The signaling message lifetime is too long.');
       }
-      if (payloadSize(message.payload) > maxSignalPayloadBytes) {
+      if (payloadSize(request.payload) > maxSignalPayloadBytes) {
         throw new CoordinationError('SIGNAL_TOO_LARGE', 'The signaling payload exceeds the size limit.');
       }
 
-      const room = await requireRoom(message.roomId);
+      const room = await requireRoom(request.roomId);
+      const caller = requireMember(room, request.capability);
       if (
         room.summary.status === 'closed'
-        || message.senderId === message.recipientId
-        || !room.memberIds.includes(message.senderId)
-        || !room.memberIds.includes(message.recipientId)
+        || caller.playerId === request.recipientId
+        || !room.members.some((member) => member.playerId === request.recipientId)
       ) {
         throw new CoordinationError('INVALID_SIGNAL_TARGET', 'Both signaling peers must be distinct room members.');
       }
 
+      const message = signalMessageSchema.parse({
+        id: createIdentifier('signal'),
+        roomId: request.roomId,
+        senderId: caller.playerId,
+        recipientId: request.recipientId,
+        kind: request.kind,
+        payload: request.payload,
+        sequence: request.sequence,
+        expiresAt: request.expiresAt,
+      });
       await repository.storeSignal(message);
       return message;
     },
 
     async receiveSignals(query) {
-      const request = parseInput(receiveSignalsQuerySchema, query);
+      const request = parseInput(receiveSignalsRequestSchema, query);
       const afterSequence = request.afterSequence ?? -1;
       const limit = request.limit ?? DEFAULT_SIGNAL_PAGE_LIMIT;
       const room = await requireRoom(request.roomId);
-      if (!room.memberIds.includes(request.recipientId)) {
-        throw new CoordinationError('NOT_A_MEMBER', 'The recipient is not a member of this room.');
-      }
-
+      const caller = requireMember(room, request.capability);
       const now = options.now();
       const candidates = await repository.loadSignals({
         roomId: request.roomId,
-        recipientId: request.recipientId,
+        recipientId: caller.playerId,
         afterSequence,
         limit,
       });
@@ -285,12 +354,12 @@ export function createCoordinationService(
         .map(parseStoredSignal)
         .filter((message) => (
           message.roomId === request.roomId
-          && message.recipientId === request.recipientId
+          && message.recipientId === caller.playerId
           && message.sequence > afterSequence
           && message.expiresAt > now
           && message.expiresAt <= now + maxSignalLifetimeMs
           && payloadSize(message.payload) <= maxSignalPayloadBytes
-          && room.memberIds.includes(message.senderId)
+          && room.members.some((member) => member.playerId === message.senderId)
         ))
         .sort((left, right) => left.sequence - right.sequence || left.id.localeCompare(right.id))
         .slice(0, limit);
@@ -298,4 +367,4 @@ export function createCoordinationService(
   };
 }
 
-export type { RoomSummary, SignalMessage } from '@board-games/protocol';
+export type { RoomAccess, RoomMember, RoomSummary, SignalMessage } from '@board-games/protocol';

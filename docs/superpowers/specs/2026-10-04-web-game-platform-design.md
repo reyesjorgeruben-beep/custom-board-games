@@ -125,4 +125,4 @@ When moving authority to a dedicated server, run the same engine, game definitio
 
 ## Open implementation choices
 
-Choose specific runtime-schema, state-serialization, styling, animation, and signaling libraries during implementation, provided they preserve the boundaries above. The exact hosting/provider setup and persistence model also remain open. These choices should not change the game-independent decision contract or per-player projection boundary.
+Choose specific runtime-schema, state-serialization, styling, animation, and signaling libraries during implementation, provided they preserve the boundaries above. This baseline originally left hosting/provider setup and persistence open; the later 2026-10-04 decision in `docs/DECISIONS.md` selected AWS Lambda Function URL and DynamoDB Standard for initial coordination. Detailed deployment and session persistence policy remain open. These choices should not change the game-independent decision contract or per-player projection boundary.

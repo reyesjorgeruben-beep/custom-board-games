@@ -16,7 +16,8 @@ flowchart LR
     Engine --> Snapshot[Player snapshot<br/>viewer-specific]
     Snapshot --> Loader[View data loader port]
     Loader --> UI[Shared table presentation<br/>already loaded data]
-    UI --> Human[Human input provider]
+    UI --> Capture[Human input capture]
+    Capture --> Human[Human decision provider]
     Snapshot --> Bot[Bot decision provider]
     Human --> Submission[Decision submission]
     Bot --> Submission
@@ -29,11 +30,12 @@ The protocol is independent of the web framework, transport, and storage provide
 
 | Area | Owns | Depends on | Must not own |
 | --- | --- | --- | --- |
-| `packages/protocol` | Serializable decision, snapshot, room, signaling, and visibility contracts; runtime parsing | Zod | Game rules, rendering, persistence |
+| `packages/protocol` | Serializable decision, snapshot, room, membership-capability, signaling, and visibility contracts; runtime parsing | Zod | Game rules, rendering, persistence |
 | `packages/game-sdk` | Typed game definition and strategy interfaces | Protocol | Turn orchestration, transport |
 | `packages/engine` | Active decision groups, correlation, validation, response barriers, state versions, projection calls | SDK, protocol | A fixed list of game actions, UI |
 | `services/coordination` | Room discovery and connection signaling through a repository port | Protocol | Hidden game state or rules |
-| `packages/ui` | Render-ready table models and decision input/provider interfaces | Protocol | Room storage, authoritative state transitions |
+| `packages/ui` | Render-ready table models and loaded-view port | Protocol | Room storage, authoritative state transitions |
+| `packages/decision-providers` | Human input adapter and bot decision handlers using one submission contract | Protocol; injected human capture callback | Rules, authoritative state, transport |
 | `apps/web` | Planned browser composition of these areas | Shared packages | Reimplementation of game rules |
 
 ## Decision and view protocol
@@ -59,7 +61,9 @@ The JSON Schema records the shared envelope fields. Its generic `context`, `resp
 
 ## Lobby and signaling protocol
 
-`RoomSummary` contains only public discovery metadata. `SignalMessage` carries an offer, answer, or ICE candidate addressed to one recipient in one room. The coordination service checks membership, recipient, expiry, and bounds before storing or returning messages. It never needs a game's private state. The initial AWS implementation will put an HTTP Lambda Function URL in front of the service and a DynamoDB adapter behind its repository port; these are deployment choices, not protocol dependencies.
+`RoomSummary` contains only public discovery metadata. Its server-assigned `hostId` is a routing identifier, not an authenticator. Room creation and a successful join return `RoomAccess`, which contains a server-assigned member ID and a 256-bit bearer capability. The capability is returned only at issuance and must stay private; repositories store only its SHA-256 verifier. Create and join requests do not accept host/player IDs, so a display name or guessed ID cannot claim an existing member.
+
+Leaving a room, sending a signal, and polling for signals require the caller's capability. The service resolves that capability to a member and derives identity from the stored membership record. Signal-send requests therefore omit `senderId`, and signal-poll requests omit `recipientId`; the service fills those fields from the authenticated caller. `SignalMessage` carries an offer, answer, or ICE candidate addressed to one recipient in one room, with no capability. The service checks room membership, recipient, expiry, and bounds before storing or returning messages. It never needs a game's private state. The initial AWS implementation will put an HTTP Lambda Function URL in front of the service and a DynamoDB adapter behind its repository port; these are deployment choices, not protocol dependencies.
 
 ## Data and input separation
 
@@ -74,7 +78,7 @@ flowchart LR
     BotPolicy --> Response
 ```
 
-Data retrieval is an adapter around a port. Presentation receives a loaded player snapshot and produces render-ready data; it does not fetch. Human controls and bot policies receive the same decision request contract and return the same submission contract. The engine alone decides whether a response is legal and how it changes state.
+Data retrieval is an adapter around a port. Presentation receives a loaded player snapshot and produces render-ready data; it does not fetch. `packages/decision-providers` turns an injected human capture callback or a bot handler into the same decision submission contract. Rendered human controls are planned for `packages/ui`; the current human adapter does not render them. The engine alone decides whether a response is legal and how it changes state.
 
 ## How to inspect and maintain schemas
 
