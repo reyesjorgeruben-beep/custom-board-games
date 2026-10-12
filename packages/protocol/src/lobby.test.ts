@@ -1,5 +1,6 @@
 /** Covers the stable lobby and signaling wire schemas that the coordination service accepts. */
 import assert from 'node:assert/strict';
+import { randomBytes } from 'node:crypto';
 import { test } from 'node:test';
 import {
   createRoomRequestSchema,
@@ -61,10 +62,30 @@ test('keeps issued room capabilities separate from public summaries and signals'
 });
 
 test('rejects caller-supplied identities when creating or joining a room', () => {
-  assert.deepEqual(createRoomRequestSchema.parse({ gameId: 'g1', maxPlayers: 4 }), {
-    gameId: 'g1', maxPlayers: 4,
+  const idempotencyKey = randomBytes(32).toString('base64url');
+  assert.deepEqual(createRoomRequestSchema.parse({ gameId: 'g1', maxPlayers: 4, idempotencyKey }), {
+    gameId: 'g1', maxPlayers: 4, idempotencyKey,
   });
-  assert.throws(() => createRoomRequestSchema.parse({ gameId: 'g1', hostId: 'claimed', maxPlayers: 4 }));
-  assert.deepEqual(joinRoomRequestSchema.parse({ roomId: 'r1' }), { roomId: 'r1' });
-  assert.throws(() => joinRoomRequestSchema.parse({ roomId: 'r1', playerId: 'claimed' }));
+  assert.throws(() => createRoomRequestSchema.parse({
+    gameId: 'g1', hostId: 'claimed', maxPlayers: 4, idempotencyKey,
+  }));
+  assert.deepEqual(joinRoomRequestSchema.parse({ roomId: 'r1', idempotencyKey }), { roomId: 'r1', idempotencyKey });
+  assert.throws(() => joinRoomRequestSchema.parse({ roomId: 'r1', playerId: 'claimed', idempotencyKey }));
+});
+
+test('requires a canonical 32-byte idempotency key for room creation and joining', () => {
+  const idempotencyKey = randomBytes(32).toString('base64url');
+
+  assert.deepEqual(createRoomRequestSchema.parse({
+    gameId: 'g1', maxPlayers: 4, idempotencyKey,
+  }), { gameId: 'g1', maxPlayers: 4, idempotencyKey });
+  assert.deepEqual(joinRoomRequestSchema.parse({ roomId: 'r1', idempotencyKey }), {
+    roomId: 'r1', idempotencyKey,
+  });
+  assert.throws(() => createRoomRequestSchema.parse({
+    gameId: 'g1', maxPlayers: 4, idempotencyKey: 'short',
+  }));
+  assert.throws(() => joinRoomRequestSchema.parse({
+    roomId: 'r1', idempotencyKey: `${'A'.repeat(42)}B`,
+  }));
 });
