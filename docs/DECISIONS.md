@@ -97,3 +97,9 @@ This file records durable project decisions so later work and sessions can recov
 **Decision:** Use Node 20's built-in test runner for TypeScript unit tests through `tsx`; run strict type checking, all unit tests, and JSON Schema freshness through pre-commit and CI. Start each test file with a comment describing the contract it covers.
 
 **Rationale:** Every contract change needs an executable review signal, and the schema artifact must not drift from its runtime source.
+
+## 2026-10-12 — Authorize room members with server-issued capabilities
+
+**Decision:** The coordination service assigns room and player IDs. Room creation and joining return a high-entropy, room-scoped bearer capability once; stored membership records keep only its SHA-256 digest. Every existing-member mutation, signal send, and signal poll authenticates with that capability. The service derives sender and recipient identity from the matched member record instead of accepting caller-supplied IDs.
+
+**Rationale:** Public room IDs and user-chosen names cannot prove identity. The current anonymous lobby has no external account provider, so the first create/join operation enrolls a new member and issues its credential; later requests prove possession without allowing the caller to select or reclaim another member's ID. Keeping only a digest limits the impact of a repository read.
