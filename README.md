@@ -2,7 +2,7 @@
 
 A browser-based platform for hosting and playing different board games through a shared lobby, table interface, and typed game engine. The platform is designed so game rules can be added without rewriting player interaction, networking, or common visual components.
 
-The project is building its game-independent contract foundation. No game implementation has been selected as a template for the engine.
+The project has a game-independent contract foundation and a Next.js shell with catalog, lobby, and table destinations. These browser views show empty states while game registration, live rooms, and table play are built. No game implementation has been selected as a template for the engine.
 
 ## Project documents
 
@@ -15,7 +15,7 @@ The project is building its game-independent contract foundation. No game implem
 - [Coordination storage options](docs/STORAGE_OPTIONS.md)
 - [Contributor and agent guidelines](AGENTS.md)
 
-## Planned structure
+## Repository structure
 
 | Path | Responsibility |
 | --- | --- |
@@ -33,7 +33,7 @@ The protocol, game, lobby, and presentation boundaries are implemented increment
 
 ## Working with contracts
 
-Install Node.js 20 or newer, then run:
+Install Node.js 20.9.0 or newer, then run:
 
 ```powershell
 npm ci
@@ -41,6 +41,8 @@ npm run check
 ```
 
 `npm run check` performs strict TypeScript checking, runs all unit tests, and confirms the committed JSON Schema matches the runtime schemas. Every unit test file starts with a short comment stating what it covers. The same command runs in pre-commit and CI.
+
+Run the browser shell locally with `npm run web:dev`, then open `http://localhost:3000`. Use `npm run web:build` to verify the production routes. The catalog, lobby, and table currently show empty states; they do not yet create rooms or start games.
 
 ## Secret protection
 

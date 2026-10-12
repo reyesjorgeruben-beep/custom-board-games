@@ -1,6 +1,9 @@
 node_modules/
+.worktrees/
 .npm-cache/
 .next/
+apps/web/next-env.d.ts
+*.tsbuildinfo
 dist/
 build/
 coverage/

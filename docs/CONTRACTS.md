@@ -16,7 +16,8 @@ flowchart LR
     Engine --> Snapshot[Player snapshot<br/>viewer-specific]
     Snapshot --> Loader[View data loader port]
     Loader --> UI[Shared table presentation<br/>already loaded data]
-    UI --> Human[Human input provider]
+    UI --> Capture[Human input capture]
+    Capture --> Human[Human decision provider]
     Snapshot --> Bot[Bot decision provider]
     Human --> Submission[Decision submission]
     Bot --> Submission
@@ -33,8 +34,9 @@ The protocol is independent of the web framework, transport, and storage provide
 | `packages/game-sdk` | Typed game definition and strategy interfaces | Protocol | Turn orchestration, transport |
 | `packages/engine` | Active decision groups, correlation, validation, response barriers, state versions, projection calls | SDK, protocol | A fixed list of game actions, UI |
 | `services/coordination` | Room discovery and connection signaling through a repository port | Protocol | Hidden game state or rules |
-| `packages/ui` | Render-ready table models and decision input/provider interfaces | Protocol | Room storage, authoritative state transitions |
-| `apps/web` | Planned browser composition of these areas | Shared packages | Reimplementation of game rules |
+| `packages/ui` | Render-ready table models and loaded-view port | Protocol | Room storage, authoritative state transitions |
+| `packages/decision-providers` | Human input adapter and bot decision handlers using one submission contract | Protocol; injected human capture callback | Rules, authoritative state, transport |
+| `apps/web` | Catalog, lobby, and table routes; future browser composition of shared packages | Next.js, React; shared packages as integration advances | Reimplementation of game rules |
 
 ## Decision and view protocol
 
@@ -74,7 +76,7 @@ flowchart LR
     BotPolicy --> Response
 ```
 
-Data retrieval is an adapter around a port. Presentation receives a loaded player snapshot and produces render-ready data; it does not fetch. Human controls and bot policies receive the same decision request contract and return the same submission contract. The engine alone decides whether a response is legal and how it changes state.
+Data retrieval is an adapter around a port. Presentation receives a loaded player snapshot and produces render-ready data; it does not fetch. `packages/decision-providers` turns an injected human capture callback or a bot handler into the same decision submission contract. Rendered human controls are planned for `packages/ui`; the current human adapter does not render them. The engine alone decides whether a response is legal and how it changes state.
 
 ## How to inspect and maintain schemas
 

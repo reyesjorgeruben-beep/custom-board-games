@@ -2,10 +2,16 @@
   "name": "custom-board-games",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "services/*"],
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "workspaces": ["apps/*", "packages/*", "services/*"],
   "scripts": {
     "test": "node scripts/run-tests.mjs",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && npm run web:typecheck",
+    "web:dev": "npm run dev --workspace @board-games/web",
+    "web:build": "npm run build --workspace @board-games/web",
+    "web:typecheck": "npm run typegen --workspace @board-games/web && tsc --noEmit -p apps/web/tsconfig.json",
     "schema:export": "node --import tsx scripts/export-schemas.mjs",
     "schema:check": "node --import tsx scripts/export-schemas.mjs --check",
     "check": "npm run typecheck && npm test && npm run schema:check"

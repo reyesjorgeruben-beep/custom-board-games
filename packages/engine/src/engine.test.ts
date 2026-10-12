@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { z } from 'zod';
 import { GameEngine } from './index.ts';
-import type { GameDefinition } from '../../game-sdk/src/index.ts';
-import { createDecisionProtocol, createSnapshotProtocol } from '../../protocol/src/index.ts';
+import type { GameDefinition } from '@board-games/game-sdk';
+import { createDecisionProtocol, createSnapshotProtocol } from '@board-games/protocol';
 
 type Decisions = {
   bid: {
