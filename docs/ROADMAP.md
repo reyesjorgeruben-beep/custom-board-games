@@ -31,9 +31,9 @@ Tests are co-located with source as `*.test.ts`; the test runner discovers them 
 | 2. Game registration | Define a typed game manifest/registry and catalog lookup. Add a tiny test game fixture to prove registration, engine turns, and player projection without shaping platform APIs around it. | PR 0 | Framework |
 | 3. Coordination identity | Define room/player capabilities and bind every room mutation and signal poll to the caller. Test impersonation and unauthorized polling. | PR 0 | Coordination |
 | 4. Table primitives | Render existing table models as reusable card, token, board, and action components, with selection and zoom hooks. Use fixture snapshots and typed submission callbacks; keep game rules out of React. | PR 0; can overlap PRs 2 and 3 | Visual |
-| 5. Atomic rooms | Make room creation, joining, and leaving conditional repository operations. Test simultaneous joins at capacity and duplicate requests. | PR 3 | Coordination |
-| 6. Room lifecycle | Define start/close and abandoned-room expiry, plus server-owned signal ordering and cleanup. Test stale rooms and cursor behavior. | PR 5 | Coordination |
-| 7. Coordination HTTP | Add a thin HTTP entry point and local/test repository with bounded requests and typed errors. | PR 6 | Coordination |
+| 5. Atomic rooms | Make room creation, joining, and leaving conditional repository operations. Add idempotency keys so create/join retries cannot allocate extra seats. Test simultaneous joins at capacity and duplicate requests. | PR 3 | Coordination |
+| 6. Room lifecycle | Define start/close and abandoned-room expiry, plus server-owned signal sequence assignment and polling cursors so client sequences cannot poison polls. Test stale rooms and cursor behavior. | PR 5 | Coordination |
+| 7. Coordination HTTP | Add a thin HTTP entry point and local/test repository with bounded requests and typed errors. Expose HTTP only after PR5 create/join idempotency and PR6 server-owned signal sequences/cursors are complete. | PR 6 | Coordination |
 | 8. AWS adapter | Add a DynamoDB repository, Lambda Function URL configuration, and usage bounds. Verify the adapter against the same repository contract before deployment. | PR 7 | Coordination |
 | 9. Browser lobby and transport | Connect catalog/lobby routes to coordination; add WebRTC signaling and data-channel adapters behind interfaces. Bind peer identity to submissions and send only per-player snapshots. | PRs 1, 2, 3, 7, 8 | Integration |
 | 10. First playable table | Compose one small game layout using shared visuals and complete a two-browser host/guest turn. Test rejection of stale/foreign responses and absence of hidden data in guest messages. | PRs 2, 4, 9 | Integration |
@@ -48,3 +48,5 @@ PRs 1, 2, and 3 can start after PR 0 on separate branches. PR 4 can start from t
 4. **PRs 7 and 8:** HTTP request limits, exact AWS resource configuration, and cost monitoring. The AWS provider choice itself is already accepted.
 
 After each PR, update `HOT_TOPICS.md` and the relevant milestone acceptance status. Add an entry to `DECISIONS.md` only when a new architecture or product choice is accepted; update `CONTRACTS.md` and regenerate the schema whenever shared ownership or wire contracts change.
+
+PR 7 is gated on both retry-safe create/join operations from PR 5 and server-owned signal sequence/cursor behavior from PR 6; neither behavior should be exposed through HTTP before those fixes land.

@@ -37,7 +37,7 @@ The current baseline and proposed PR sequence are tracked in [ROADMAP.md](ROADMA
 | Visibility policy model | Audience helper and strict snapshot parsing implemented; enforcement review open | Verify each game's projection at the guest boundary; settle how audiences apply to nested views. |
 | Multi-player decision resolution | Single-kind response barrier implemented; disconnect policy open | Review duplicate/stale submissions and resolution order; define behavior for disconnects and any need for concurrent kinds. |
 | Lobby member identity | Provider-neutral capability authorization implemented | Carry the private member capability through the HTTP adapter; define recovery/rotation and issuance abuse controls. |
-| Lobby signaling deployment | Provider-neutral service implemented; deployment policy open | Add atomic room writes, bounded HTTP polling, cleanup, and abuse controls before the AWS adapter. |
+| Lobby signaling deployment | Provider-neutral service implemented; deployment policy open | Before PR7 HTTP exposure, PR5 must make create/join retries idempotent so retries cannot consume extra seats, and PR6 must assign signal sequences server-side so callers cannot poison polling cursors. Then add atomic room writes, bounded polling, cleanup, and abuse controls. |
 | Host loss and reconnection | Open | Choose what happens when the authoritative host disconnects and how a session can recover or end safely. |
 | Inheritance versus composition conventions | Open | Document when shared base types are appropriate; use composition by default until concrete repeated behavior justifies inheritance. |
 
