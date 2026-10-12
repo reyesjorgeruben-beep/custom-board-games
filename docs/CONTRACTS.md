@@ -34,7 +34,7 @@ The protocol is independent of the web framework, transport, and storage provide
 | `packages/game-sdk` | Typed game definition and strategy interfaces | Protocol | Turn orchestration, transport |
 | `packages/engine` | Active decision groups, correlation, validation, response barriers, state versions, projection calls | SDK, protocol | A fixed list of game actions, UI |
 | `services/coordination` | Room discovery and connection signaling through a repository port | Protocol | Hidden game state or rules |
-| `packages/ui` | Render-ready table models and loaded-view port | Protocol | Room storage, authoritative state transitions |
+| `packages/ui` | Render-ready table models and view loader port; reusable React card, token, board, and action surfaces; selection, zoom, and reduced-motion hooks | Protocol, React | Room storage, authoritative state transitions |
 | `packages/decision-providers` | Human input adapter and bot decision handlers using one submission contract | Protocol; injected human capture callback | Rules, authoritative state, transport |
 | `apps/web` | Catalog, lobby, and table routes; future browser composition of shared packages | Next.js, React; shared packages as integration advances | Reimplementation of game rules |
 
@@ -76,7 +76,9 @@ flowchart LR
     BotPolicy --> Response
 ```
 
-Data retrieval is an adapter around a port. Presentation receives a loaded player snapshot and produces render-ready data; it does not fetch. `packages/decision-providers` turns an injected human capture callback or a bot handler into the same decision submission contract. Rendered human controls are planned for `packages/ui`; the current human adapter does not render them. The engine alone decides whether a response is legal and how it changes state.
+Data retrieval is an adapter around a port. Presentation receives a loaded player snapshot and produces render-ready data; it does not fetch. Shared action surfaces take game-specific controls through composition, so the UI does not impose a platform action list. The `/table` fixture demonstrates a typed `DecisionSubmission` callback and records the captured response locally; it does not call a provider or resolve game rules. `packages/decision-providers` turns an injected human capture callback or a bot handler into the same decision submission contract. The engine alone decides whether a response is legal and how it changes state.
+
+The renderer-neutral model entry remains available from `@board-games/ui`. Browser components and hooks are exposed through the React subpaths `@board-games/ui/primitives`, `@board-games/ui/interactions`, and `@board-games/ui/viewport`; game layout composition remains outside the shared package.
 
 ## How to inspect and maintain schemas
 

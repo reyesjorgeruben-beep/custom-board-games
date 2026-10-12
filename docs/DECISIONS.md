@@ -97,3 +97,9 @@ This file records durable project decisions so later work and sessions can recov
 **Decision:** Use Node 20's built-in test runner for TypeScript unit tests through `tsx`; run strict type checking, all unit tests, and JSON Schema freshness through pre-commit and CI. Start each test file with a comment describing the contract it covers.
 
 **Rationale:** Every contract change needs an executable review signal, and the schema artifact must not drift from its runtime source.
+
+## 2026-10-12 — Keep table composition separate from shared React primitives
+
+**Decision:** `packages/ui` keeps its renderer-neutral table models at the package root and exposes React visuals and interaction hooks through explicit subpaths. Shared card, token, board, and action components own presentation behavior; each game or fixture supplies arrangement, content, and decision-specific controls. Action callbacks return typed submissions and never apply game rules.
+
+**Rationale:** React is needed for browser interaction, while the presentation contracts remain usable independently of React. This keeps game layouts open to different board shapes and leaves response validation and state transitions with the host engine.
