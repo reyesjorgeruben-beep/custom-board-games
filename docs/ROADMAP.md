@@ -2,13 +2,13 @@
 
 **Status:** Proposal for review, 2026-10-12. This document tracks the current baseline and suggested PR sequence. It does not change decisions in [DECISIONS.md](DECISIONS.md). Accepted choices go there; unresolved choices stay in [HOT_TOPICS.md](HOT_TOPICS.md).
 
-**Progress:** PR 0 is committed locally as `af917b3`. PR 1 is implemented on the dependent `feat/web-shell` branch; the build, route smoke check, and 35-test suite passed locally. Later PRs remain proposed.
+**Progress:** PR 0 is committed locally as `af917b3`. PR 1 is implemented on the dependent `feat/web-shell` branch; the build, route smoke check, and 35-test suite passed locally. PR 4 now has a fixture-backed implementation on `feat/table-primitives`; it remains a sample presentation and is not connected to a live game session. Other later PRs remain proposed.
 
 ## Where the project stands
 
 - The accepted architecture is a game-independent Next.js catalog, lobby, and table. The host browser owns authoritative state; guests receive player-specific snapshots. WebRTC carries table traffic; AWS Lambda Function URL and DynamoDB Standard provide thin coordination. Timers and dedicated-server authority are deferred.
-- Shared protocol schemas, the game SDK, engine, decision-provider adapters, table data models, and a provider-neutral coordination service exist. `npm run check` passed on 2026-10-12: type checking, 35 tests, and schema freshness.
-- M0 has a Next.js shell with `/catalog`, `/lobby`, and `/table` empty states. M1 has substantial code but needs game registration. M2 has table data models but no shared tabletop React components or interaction controls. M3 has coordination logic but no HTTP/AWS adapter, connected browser lobby, WebRTC transport, or complete playable flow. M4 has provider adapters but no rendered human controls.
+- Shared protocol schemas, the game SDK, engine, decision-provider adapters, table data models, and a provider-neutral coordination service exist. The baseline `npm run check` passed on 2026-10-12 with type checking, 35 tests, and schema freshness.
+- M0 has a Next.js shell with `/catalog`, `/lobby`, and a fixture-backed `/table` presentation preview. M1 has substantial code but needs game registration. M2 now has reusable React visuals and selection, zoom, and reduced-motion behavior; a registered game layout remains to be integrated. M3 has coordination logic but no HTTP/AWS adapter, connected browser lobby, WebRTC transport, or complete playable flow. M4 has provider adapters; the fixture captures typed responses, while live human controls still need host integration.
 - The 2026-10-05 interface-foundation plan intentionally built parts of later milestones before the M0 browser shell. This roadmap returns to the documented milestone order without discarding that work.
 
 ### Acceptance review
@@ -17,7 +17,7 @@
 | --- | --- | --- |
 | M0 | Repository guidance, package boundaries, and Next.js/React app with distinct catalog, lobby, and table routes; verified by build and route tests. | None for the M0 shell. Live data and controls belong to later milestones. |
 | M1 | Typed game definition, strategies, engine turn/barrier orchestration, runtime decision schemas | Add and exercise game registration; review the complete criteria with a registered fixture game. |
-| M2 | Renderer-neutral table data contract | Visual components, shared selection/zoom/animation behavior, and a game-composed layout. |
+| M2 | Renderer-neutral table data contract; shared card, token, board, and action primitives; selection, zoom, and reduced-motion behavior; fixture composition of a viewer snapshot and pending decision. | Replace the fixture with a registered game's layout when registration and layout ownership are defined; the current preview is not a live table. |
 | M3 | Provider-neutral room/signaling service and player snapshot contract | Caller authorization, HTTP/AWS coordination, browser lobby, WebRTC host/guest flow, and end-to-end projection checks. |
 | M4 | Correlated human/bot submission adapters and engine validation | Render human controls and demonstrate both immediate and waiting decisions through a playable flow. |
 | M5 | Portability is a design constraint | Dedicated authority, recovery, timers, and operational readiness remain deferred. |
@@ -32,7 +32,7 @@ Tests are co-located with source as `*.test.ts`; the test runner discovers them 
 | 1. Web shell | Create the Next.js workspace and distinct catalog, lobby, and table routes using fixture data. Run the full check suite plus a web build. This closes M0 when all its criteria pass. | PR 0 interface ownership | Web |
 | 2. Game registration | Define a typed game manifest/registry and catalog lookup. Add a tiny test game fixture to prove registration, engine turns, and player projection without shaping platform APIs around it. | PR 0 | Framework |
 | 3. Coordination identity | Define room/player capabilities and bind every room mutation and signal poll to the caller. Test impersonation and unauthorized polling. | PR 0 | Coordination |
-| 4. Table primitives | Render existing table models as reusable card, token, board, and action components, with selection and zoom hooks. Use fixture snapshots and typed submission callbacks; keep game rules out of React. | PR 0; can overlap PRs 2 and 3 | Visual |
+| 4. Table primitives | Render existing table models as reusable card, token, board, and action components, with selection and zoom hooks. Use fixture snapshots and typed submission callbacks; keep game rules out of React. **Implemented locally on `feat/table-primitives`; fixture only.** | PR 0; can overlap PRs 2 and 3 | Visual |
 | 5. Atomic rooms | Make room creation, joining, and leaving conditional repository operations. Test simultaneous joins at capacity and duplicate requests. | PR 3 | Coordination |
 | 6. Room lifecycle | Define start/close and abandoned-room expiry, plus server-owned signal ordering and cleanup. Test stale rooms and cursor behavior. | PR 5 | Coordination |
 | 7. Coordination HTTP | Add a thin HTTP entry point and local/test repository with bounded requests and typed errors. | PR 6 | Coordination |

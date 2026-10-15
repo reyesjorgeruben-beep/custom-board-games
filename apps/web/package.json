@@ -12,6 +12,7 @@
     "typegen": "next typegen"
   },
   "dependencies": {
+    "@board-games/ui": "*",
     "next": "16.4.0",
     "react": "19.3.0",
     "react-dom": "19.3.0"

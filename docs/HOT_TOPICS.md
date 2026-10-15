@@ -12,6 +12,7 @@ The current baseline and proposed PR sequence are tracked in [ROADMAP.md](ROADMA
 | GitHub repository creation | Complete | Public repository at `reyesjorgeruben-beep/custom-board-games`; project structure and architecture are published on `main`. |
 | Public repository secret protection | Complete locally | Full history previously passed Gitleaks; the configured `detect-secrets` scan passes, the local pre-commit hook is installed, and CI plus GitHub protections are documented. |
 | Interface foundation | Implemented baseline; M1/M4 acceptance review recorded | Add game registration and rendered human controls in the next milestone PRs. |
+| Shared tabletop visuals | PR4 implementation in review; fixture snapshot only | Connect a registered game's composition after PR2, then connect submissions to the host runtime in the playable-table integration. |
 | Contract review schema | Generated and ownership map reviewed | Recheck `CONTRACTS.md` and regenerate the schema whenever shared wire contracts change. |
 | M0 browser shell | Complete locally | Keep catalog, lobby, and table routes as the integration surfaces for later milestone PRs. |
 
@@ -34,7 +35,7 @@ The current baseline and proposed PR sequence are tracked in [ROADMAP.md](ROADMA
 | Topic | Status | Next action |
 | --- | --- | --- |
 | Decision protocol representation | Initial typed/runtime contract implemented; evolution policy open | Review current ID, kind, actor, version, and Zod correlation against M1/M4; decide schema evolution before independently deployed clients. |
-| Game and package registration | Open | Specify the game manifest/registry contract and how games are discovered without coupling the engine to a fixed catalog. |
+| Game and package registration | Open | Specify the game manifest/registry contract and how games are discovered without coupling the engine to a fixed catalog. PR2 intentionally does not register React layouts; the current table route supplies a separate fixture composition. |
 | Visibility policy model | Audience helper and strict snapshot parsing implemented; enforcement review open | Verify each game's projection at the guest boundary; settle how audiences apply to nested views. |
 | Multi-player decision resolution | Single-kind response barrier implemented; disconnect policy open | Review duplicate/stale submissions and resolution order; define behavior for disconnects and any need for concurrent kinds. |
 | Lobby signaling deployment | Provider-neutral service implemented; deployment policy open | Define caller-bound room identity, atomic writes, bounded HTTP polling, cleanup, and abuse controls before the AWS adapter. |

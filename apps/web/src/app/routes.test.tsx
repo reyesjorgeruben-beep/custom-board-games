@@ -21,9 +21,11 @@ test('lobby states that live rooms are not connected yet', () => {
   assert.match(html, /href="\/catalog"/);
 });
 
-test('table sends players back to the lobby when no session exists', () => {
+test('table presents a fixture preview without claiming a live game session', () => {
   const html = renderToStaticMarkup(createElement(TablePage));
-  assert.match(html, /Game table/);
-  assert.match(html, /No table is active/);
+  assert.match(html, /A table before the first turn/);
+  assert.match(html, /Fixture preview/);
+  assert.match(html, /Not connected to a game/);
+  assert.match(html, /West path/);
   assert.match(html, /href="\/lobby"/);
 });
